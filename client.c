@@ -1,32 +1,41 @@
-#include <errno.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
-#include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
+#include <ctype.h>
+#include <arpa/inet.h>
 
-void main()
+int main(int argc , char *argv[])
 {
     int sockfd = -1;
     struct sockaddr_in server_addr;
-    char recv_buffer[1024];
-    time_t ticks;
+    char valread[1024];
+    char valsend[1024];
+    int stop = 1;
 
-    memset(recv_buffer, 0 , sizeof(recv_buffer)); 
+    memset(valsend, 0 , sizeof(valsend)); // khoi tao vung nho
+    memset(valread, 0 , sizeof(valread)); 
 	memset(&server_addr, 0 , sizeof(server_addr));
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    sockfd = socket(AF_INET, SOCK_STREAM, 0); // khoi tao socket
+	server_addr.sin_family = AF_INET; // thong tin server
+	server_addr.sin_addr.s_addr = inet_addr("192.168.1.217");
 	server_addr.sin_port = htons(5000);
 
-    if(connect(sockfd, (struct  sockaddr *)&server_addr, sizeof(server_addr))==0)
-    {
-        read(sockfd, recv_buffer, sizeof(recv_buffer)-1);
-        printf("\n%s\n", recv_buffer);
-        close(sockfd);
+    connect(sockfd, (struct  sockaddr *)&server_addr, sizeof(server_addr)); // connect toi sever
+
+    while (stop!=0)
+    {          
+        printf("Client: ");
+        fgets(valsend, sizeof(valsend), stdin); // nhap thong tin can gui
+        fflush(stdin);
+        send(sockfd, valsend, sizeof(valsend), 0);  //gui thong tin den server
+        recv(sockfd, valread, sizeof(valread), 0); // nhan thong tin tu serverr
+        printf("Server: %s", valread); // in ra man hinh 
+        stop = strcmp(valsend, "x\n"); // so sanh
     }
+    close(sockfd); 
+    exit(EXIT_SUCCESS);
 }
